@@ -104,11 +104,11 @@ namespace EncodingFixer
 
 
             var path = args.FirstOrDefault() ?? Directory.GetCurrentDirectory();
-            foreach (var file in Directory.GetFiles(path, "*.*", SearchOption.AllDirectories))
+            Directory.GetFiles(path, "*.*", SearchOption.AllDirectories).AsParallel().ForAll(file =>
             {
                 var ext = Path.GetExtension(file)?.ToLower();
                 if (ext == ".cs" || ext == ".txt" || ext == ".cshtml" || ext == ".xaml" || ext == ".xml" ||
-                    ext == ".html" || ext==".srt")
+                    ext == ".html" || ext == ".srt")
                 {
                     if (GetEncoding(file).Equals(Encoding.ASCII))
                     {
@@ -116,8 +116,8 @@ namespace EncodingFixer
 
                         var sourceEncoding = Encoding.GetEncoding("windows-1250");
 
-                        var hasUtf8 =  HasAnyPattern(data, utf8snippets);
-                        var hasWindows1250 =  HasAnyPattern(data, windows1250snippets);
+                        var hasUtf8 = HasAnyPattern(data, utf8snippets);
+                        var hasWindows1250 = HasAnyPattern(data, windows1250snippets);
 
                         if (hasUtf8 && hasWindows1250)
                         {
@@ -125,7 +125,7 @@ namespace EncodingFixer
                             continue;
                         }
 
-                        if (hasUtf8) sourceEncoding= Encoding.UTF8;
+                        if (hasUtf8) sourceEncoding = Encoding.UTF8;
 
 
                         var converted = file + ".converted";
@@ -139,16 +139,14 @@ namespace EncodingFixer
                                 sw.Close();
                             }
                         }
-                        File.Move(file, file+".bak");
+
+                        File.Move(file, file + ".bak");
                         File.Move(converted, file);
                         File.Delete(converted);
-                        File.Delete(file +".bak");
+                        File.Delete(file + ".bak");
                     }
-                    
                 }
-            }
-
-
+            });
         }
     }
 }
